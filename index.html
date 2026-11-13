@@ -72,6 +72,14 @@
     .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 22px; }
     .header .brand { width: 180px; max-width: 60%; height: auto; }
     .header .seal { width: 72px; height: auto; flex: none; }
+    .profile { display: flex; gap: 10px; margin: 0 0 16px; }
+    .profile label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font-weight: 500; cursor: pointer; }
+    .profile input { width: auto; margin: 0; accent-color: var(--accent); }
+    .profile label:has(input:checked) { border-color: var(--accent); background: #eff6ff; }
+    textarea { width: 100%; min-height: 110px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font: inherit; font-size: 1rem; resize: vertical; outline: none; }
+    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
+    .counter { margin: 4px 0 16px; text-align: right; font-size: .78rem; color: var(--muted); }
+    .optional { font-weight: 400; color: var(--muted); }
   </style>
 </head>
 <body>
@@ -100,6 +108,16 @@
       <select id="state" name="state" autocomplete="address-level1" required>
         <option value="">Selecione</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
       </select>
+
+      <label>Você é</label>
+      <div class="profile" role="radiogroup" aria-label="Você é">
+        <label><input type="radio" name="profile" value="Cliente" required> Cliente</label>
+        <label><input type="radio" name="profile" value="Assessor"> Assessor</label>
+      </div>
+
+      <label for="comment">Comentário <span class="optional">(opcional)</span></label>
+      <textarea id="comment" name="comment" maxlength="2000" placeholder="Conte como podemos ajudar"></textarea>
+      <div class="counter" id="counter">0 / 2000</div>
 
       <label class="consent">
         <input type="checkbox" id="consent" name="consent" required>
@@ -141,6 +159,11 @@
     }
     phone.addEventListener("input", () => { phone.value = maskPhone(phone.value); });
 
+    const comment = document.getElementById("comment");
+    const counter = document.getElementById("counter");
+    const updateCounter = () => { counter.textContent = comment.value.length + " / 2000"; };
+    comment.addEventListener("input", updateCounter);
+
     function show(type, text) {
       msg.className = "msg " + type;
       msg.textContent = text;
@@ -161,6 +184,8 @@
       if (digits.length < 10) return show("err", "Informe um telefone com DDD.");
       if (city.length < 2) return show("err", "Informe sua cidade.");
       if (!state) return show("err", "Selecione seu estado.");
+      const profile = form.querySelector('[name="profile"]:checked')?.value;
+      if (!profile) return show("err", "Informe se você é Cliente ou Assessor.");
       if (!document.getElementById("consent").checked) return show("err", "Para continuar, marque a caixa de consentimento (LGPD).");
 
       btn.disabled = true;
@@ -176,6 +201,8 @@
             phone: phone.value,
             city,
             state,
+            profile,
+            comment: comment.value.trim().slice(0, 2000),
             consent: true,
             consent_at: new Date().toISOString(),
             timestamp: new Date().toISOString(),
@@ -184,6 +211,7 @@
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
+        updateCounter();
         show("ok", "Recebemos seus dados! Em breve entraremos em contato.");
       } catch (err) {
         console.error(err);
