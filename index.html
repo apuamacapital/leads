@@ -72,6 +72,10 @@
     .cfg .modes { display: flex; gap: 18px; font-size: .9rem; }
     .cfg .modes label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; }
     .cfg .modes input { width: auto; margin: 0; }
+    .consent { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 8px; font-weight: 400; font-size: .9rem; line-height: 1.4; }
+    .consent input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+    .lgpd { margin: 0 0 18px; font-size: .78rem; line-height: 1.45; color: var(--muted); }
+    .lgpd a { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -111,6 +115,12 @@
         <option value="">Selecione</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
       </select>
 
+      <label class="consent">
+        <input type="checkbox" id="consent" name="consent" required>
+        <span>Li e concordo com o tratamento dos meus dados pessoais pela Apuama Capital, conforme a <a id="privacy-link" href="#" target="_blank" rel="noopener">Política de Privacidade</a>.</span>
+      </label>
+      <p class="lgpd">Seus dados (nome, e-mail, telefone, cidade e estado) serão usados pela Apuama Capital apenas para entrar em contato sobre nossos produtos e serviços, conforme a Lei nº 13.709/2018 (LGPD). Eles são armazenados com segurança e não são vendidos nem compartilhados com terceiros para fins comerciais. Você pode pedir acesso, correção ou exclusão dos seus dados a qualquer momento pelo e-mail <a href="mailto:pfortunato@apuamacapital.com.br">pfortunato@apuamacapital.com.br</a>.</p>
+
       <button id="submit" type="submit">Enviar</button>
       <div id="msg" class="msg" role="status" aria-live="polite"></div>
     </form>
@@ -122,6 +132,8 @@
     const DEFAULT_TEST_URL = "https://automacao.deepspacedata.tech/webhook-test/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
     const DEFAULT_PROD_URL = "https://webhook.automacao.deepspacedata.tech/webhook/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
     const SOURCE = "github-pages";
+    // Link da Política de Privacidade. Enquanto estiver vazio, o texto aparece sem link.
+    const PRIVACY_URL = "";
     // =========================
 
     const testUrl = document.getElementById("test-url");
@@ -148,6 +160,10 @@
       const mode = document.querySelector('input[name="mode"]:checked')?.value || "test";
       return { mode, url: (mode === "prod" ? prodUrl : testUrl).value.trim() };
     }
+
+    const privacyLink = document.getElementById("privacy-link");
+    if (PRIVACY_URL) privacyLink.href = PRIVACY_URL;
+    else privacyLink.replaceWith(document.createTextNode(privacyLink.textContent));
 
     const form = document.getElementById("lead-form");
     const phone = document.getElementById("phone");
@@ -184,6 +200,7 @@
       if (digits.length < 10) return show("err", "Informe um telefone com DDD.");
       if (city.length < 2) return show("err", "Informe sua cidade.");
       if (!state) return show("err", "Selecione seu estado.");
+      if (!document.getElementById("consent").checked) return show("err", "Para continuar, marque a caixa de consentimento (LGPD).");
 
       const hook = currentWebhook();
       if (!/^https?:\/\//.test(hook.url)) return show("err", "Cole a URL do webhook de " + (hook.mode === "prod" ? "produção" : "teste") + " na configuração.");
@@ -201,6 +218,8 @@
             phone: phone.value,
             city,
             state,
+            consent: true,
+            consent_at: new Date().toISOString(),
             timestamp: new Date().toISOString(),
             source: SOURCE
           })
