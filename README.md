@@ -18,7 +18,7 @@ Formulário estático de captação de leads, publicado no GitHub Pages, que env
 
 ## Configuração
 
-Na `index.html` (página de teste), cole a **Test URL** e a **Production URL** do nó Webhook do n8n no quadro "Configuração do webhook" e escolha para qual enviar. Os valores ficam salvos no navegador; os padrões estão nas constantes `DEFAULT_TEST_URL` e `DEFAULT_PROD_URL` no topo do script. O `wordpress-snippet.html` usa só a Production URL, fixa no código. A Production URL só responde com o workflow **ativo**.
+Os dois arquivos enviam para a **Production URL** do webhook, fixa no código (`WEBHOOK_URL` no topo do script). A Production URL só responde com o workflow **ativo**.
 
 ## Publicação
 

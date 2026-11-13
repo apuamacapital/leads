@@ -65,13 +65,6 @@
     .msg { display: none; margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: .95rem; }
     .msg.ok { display: block; background: var(--ok-bg); color: var(--ok-text); }
     .msg.err { display: block; background: var(--err-bg); color: var(--err-text); }
-    .cfg { margin: 0 0 24px; padding: 14px 16px; border: 1px dashed var(--border); border-radius: 12px; background: #f8fafc; }
-    .cfg summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
-    .cfg .cfg-body { margin-top: 14px; }
-    .cfg input { font-size: .85rem; padding: 10px 12px; margin-bottom: 12px; }
-    .cfg .modes { display: flex; gap: 18px; font-size: .9rem; }
-    .cfg .modes label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; }
-    .cfg .modes input { width: auto; margin: 0; }
     .consent { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 8px; font-weight: 400; font-size: .9rem; line-height: 1.4; }
     .consent input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
     .lgpd { margin: 0 0 18px; font-size: .78rem; line-height: 1.45; color: var(--muted); }
@@ -82,20 +75,6 @@
   <main class="card">
     <h1>Fale com a gente</h1>
     <p class="sub">Deixe seus dados e entraremos em contato.</p>
-
-    <details class="cfg" open>
-      <summary>Configuração do webhook (n8n)</summary>
-      <div class="cfg-body">
-        <label for="test-url">Test URL</label>
-        <input id="test-url" type="url" placeholder="https://.../webhook-test/...">
-        <label for="prod-url">Production URL</label>
-        <input id="prod-url" type="url" placeholder="https://.../webhook/...">
-        <div class="modes" role="radiogroup" aria-label="Enviar para">
-          <label><input type="radio" name="mode" value="test"> Teste</label>
-          <label><input type="radio" name="mode" value="prod"> Produção</label>
-        </div>
-      </div>
-    </details>
 
     <form id="lead-form" novalidate>
       <label for="name">Nome</label>
@@ -129,37 +108,12 @@
   <script>
     // ===== CONFIGURAÇÃO =====
     // Valores iniciais. O que você colar nos campos da página fica salvo no navegador.
-    const DEFAULT_TEST_URL = "https://automacao.deepspacedata.tech/webhook-test/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
-    const DEFAULT_PROD_URL = "https://webhook.automacao.deepspacedata.tech/webhook/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
+    // URL de produção do nó Webhook do n8n (método POST).
+    const WEBHOOK_URL = "https://webhook.automacao.deepspacedata.tech/webhook/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
     const SOURCE = "github-pages";
     // Link da Política de Privacidade. Enquanto estiver vazio, o texto aparece sem link.
     const PRIVACY_URL = "";
     // =========================
-
-    const testUrl = document.getElementById("test-url");
-    const prodUrl = document.getElementById("prod-url");
-    const modes = document.querySelectorAll('input[name="mode"]');
-
-    function load(key, fallback) {
-      try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
-    }
-    function save(key, value) {
-      try { localStorage.setItem(key, value); } catch {}
-    }
-
-    testUrl.value = load("leads.testUrl", DEFAULT_TEST_URL);
-    prodUrl.value = load("leads.prodUrl", DEFAULT_PROD_URL);
-    const savedMode = load("leads.mode", "test");
-    modes.forEach((r) => { r.checked = r.value === savedMode; });
-
-    testUrl.addEventListener("input", () => save("leads.testUrl", testUrl.value.trim()));
-    prodUrl.addEventListener("input", () => save("leads.prodUrl", prodUrl.value.trim()));
-    modes.forEach((r) => r.addEventListener("change", () => save("leads.mode", r.value)));
-
-    function currentWebhook() {
-      const mode = document.querySelector('input[name="mode"]:checked')?.value || "test";
-      return { mode, url: (mode === "prod" ? prodUrl : testUrl).value.trim() };
-    }
 
     const privacyLink = document.getElementById("privacy-link");
     if (PRIVACY_URL) privacyLink.href = PRIVACY_URL;
@@ -202,14 +156,11 @@
       if (!state) return show("err", "Selecione seu estado.");
       if (!document.getElementById("consent").checked) return show("err", "Para continuar, marque a caixa de consentimento (LGPD).");
 
-      const hook = currentWebhook();
-      if (!/^https?:\/\//.test(hook.url)) return show("err", "Cole a URL do webhook de " + (hook.mode === "prod" ? "produção" : "teste") + " na configuração.");
-
       btn.disabled = true;
       btn.textContent = "Enviando...";
 
       try {
-        const res = await fetch(hook.url, {
+        const res = await fetch(WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -226,7 +177,7 @@
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
-        show("ok", "Recebemos seus dados! (enviado para " + (hook.mode === "prod" ? "produção" : "teste") + ")");
+        show("ok", "Recebemos seus dados! Em breve entraremos em contato.");
       } catch (err) {
         console.error(err);
         show("err", "Não foi possível enviar agora. Tente novamente em instantes.");
