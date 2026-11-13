@@ -69,10 +69,14 @@
     .consent input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
     .lgpd { margin: 0 0 18px; font-size: .78rem; line-height: 1.45; color: var(--muted); }
     .lgpd a { color: var(--accent); }
+    .brand { display: block; width: 220px; max-width: 70%; height: auto; margin: 0 auto 22px; }
+    .seal { margin-top: 24px; padding-top: 18px; border-top: 1px solid #e2e8f0; text-align: center; }
+    .seal img { width: 96px; height: auto; }
   </style>
 </head>
 <body>
   <main class="card">
+    <img class="brand" src="assets/apuama-capital.png" alt="Apuama Capital" width="380" height="88">
     <h1>Fale com a gente</h1>
     <p class="sub">Deixe seus dados e entraremos em contato.</p>
 
@@ -103,6 +107,10 @@
       <button id="submit" type="submit">Enviar</button>
       <div id="msg" class="msg" role="status" aria-live="polite"></div>
     </form>
+
+    <div class="seal">
+      <img src="assets/anbima-gestao-de-recursos.jpg" alt="Autorregulação ANBIMA - Gestão de Recursos" width="140" height="105">
+    </div>
   </main>
 
   <script>
