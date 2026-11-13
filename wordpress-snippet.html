@@ -3,8 +3,8 @@
   <style>
     .lf-n8n{max-width:420px;margin:0 auto;font-family:inherit}
     .lf-n8n label{display:block;font-weight:600;font-size:.9rem;margin:0 0 6px}
-    .lf-n8n input{display:block;width:100%;box-sizing:border-box;padding:12px 14px;margin:0 0 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem;background:#fff;color:#0f172a}
-    .lf-n8n input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
+    .lf-n8n input,.lf-n8n select{display:block;width:100%;box-sizing:border-box;padding:12px 14px;margin:0 0 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:1rem;background:#fff;color:#0f172a}
+    .lf-n8n input:focus,.lf-n8n select:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
     .lf-n8n button{width:100%;padding:13px;border:0;border-radius:8px;background:#2563eb;color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
     .lf-n8n button:disabled{opacity:.6;cursor:wait}
     .lf-n8n .lf-msg{display:none;margin-top:14px;padding:12px 14px;border-radius:8px;font-size:.95rem}
@@ -18,6 +18,10 @@
     <input id="lf-email" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
     <label for="lf-phone">Telefone</label>
     <input id="lf-phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678" maxlength="15" required>
+    <label for="lf-city">Cidade</label>
+    <input id="lf-city" name="city" type="text" autocomplete="address-level2" placeholder="Sua cidade" required>
+    <label for="lf-state">Estado</label>
+    <select id="lf-state" name="state" autocomplete="address-level1" required><option value="">Selecione</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option></select>
     <button type="submit">Enviar</button>
     <div class="lf-msg" role="status" aria-live="polite"></div>
   </form>
@@ -48,15 +52,19 @@
       msg.className = "lf-msg";
       var name = form.querySelector('[name="name"]').value.trim();
       var email = form.querySelector('[name="email"]').value.trim();
+      var city = form.querySelector('[name="city"]').value.trim();
+      var state = form.querySelector('[name="state"]').value;
       if (name.length < 2) return show("lf-err", "Informe seu nome.");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show("lf-err", "Informe um e-mail válido.");
       if (phone.value.replace(/\D/g, "").length < 10) return show("lf-err", "Informe um telefone com DDD.");
+      if (city.length < 2) return show("lf-err", "Informe sua cidade.");
+      if (!state) return show("lf-err", "Selecione seu estado.");
 
       btn.disabled = true; btn.textContent = "Enviando...";
       fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name, email: email, phone: phone.value, timestamp: new Date().toISOString(), source: SOURCE })
+        body: JSON.stringify({ name: name, email: email, phone: phone.value, city: city, state: state, timestamp: new Date().toISOString(), source: SOURCE })
       }).then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();

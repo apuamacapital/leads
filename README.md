@@ -9,6 +9,8 @@ Formulário estático de captação de leads, publicado no GitHub Pages, que env
   "name": "Maria Silva",
   "email": "maria@exemplo.com",
   "phone": "(11) 91234-5678",
+  "city": "São Paulo",
+  "state": "SP",
   "timestamp": "2026-11-13T18:00:00.000Z",
   "source": "github-pages"
 }

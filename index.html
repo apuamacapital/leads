@@ -38,7 +38,7 @@
     h1 { margin: 0 0 6px; font-size: 1.5rem; }
     p.sub { margin: 0 0 24px; color: var(--muted); font-size: .95rem; }
     label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
-    input {
+    input, select {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid var(--border);
@@ -48,7 +48,7 @@
       outline: none;
       transition: border-color .15s, box-shadow .15s;
     }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
     button {
       width: 100%;
       padding: 13px;
@@ -81,6 +81,14 @@
 
       <label for="phone">Telefone</label>
       <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678" maxlength="15" required>
+
+      <label for="city">Cidade</label>
+      <input id="city" name="city" type="text" autocomplete="address-level2" placeholder="Sua cidade" required>
+
+      <label for="state">Estado</label>
+      <select id="state" name="state" autocomplete="address-level1" required>
+        <option value="">Selecione</option><option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+      </select>
 
       <button id="submit" type="submit">Enviar</button>
       <div id="msg" class="msg" role="status" aria-live="polite"></div>
@@ -119,13 +127,17 @@
       e.preventDefault();
       msg.className = "msg";
 
-      const name = form.name.value.trim();
-      const email = form.email.value.trim();
+      const name = form.querySelector('[name="name"]').value.trim();
+      const email = form.querySelector('[name="email"]').value.trim();
       const digits = phone.value.replace(/\D/g, "");
+      const city = form.querySelector('[name="city"]').value.trim();
+      const state = form.querySelector('[name="state"]').value;
 
       if (name.length < 2) return show("err", "Informe seu nome.");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show("err", "Informe um e-mail válido.");
       if (digits.length < 10) return show("err", "Informe um telefone com DDD.");
+      if (city.length < 2) return show("err", "Informe sua cidade.");
+      if (!state) return show("err", "Selecione seu estado.");
 
       btn.disabled = true;
       btn.textContent = "Enviando...";
@@ -138,6 +150,8 @@
             name,
             email,
             phone: phone.value,
+            city,
+            state,
             timestamp: new Date().toISOString(),
             source: SOURCE
           })
