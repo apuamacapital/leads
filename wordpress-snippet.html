@@ -13,11 +13,11 @@
     .lf-n8n .lf-consent{display:flex;gap:10px;align-items:flex-start;margin:4px 0 8px;font-weight:400;font-size:.9rem;line-height:1.4}
     .lf-n8n .lf-consent input{width:18px;height:18px;margin:2px 0 0;flex:none;padding:0}
     .lf-n8n .lf-lgpd{margin:0 0 16px;font-size:.78rem;line-height:1.45;color:#64748b}
-    .lf-n8n .lf-brand{display:block;width:220px;max-width:70%;height:auto;margin:0 auto 22px}
-    .lf-n8n .lf-seal{margin-top:24px;padding-top:18px;border-top:1px solid #e2e8f0;text-align:center}
-    .lf-n8n .lf-seal img{width:96px;height:auto;display:inline-block}
+    .lf-n8n .lf-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 22px}
+    .lf-n8n .lf-brand{width:180px;max-width:60%;height:auto;margin:0}
+    .lf-n8n .lf-seal{width:72px;height:auto;flex:none;margin:0}
   </style>
-  <img class="lf-brand" src="https://apuamacapital.github.io/leads/assets/apuama-capital.png" alt="Apuama Capital" width="380" height="88">
+  <div class="lf-header"><img class="lf-brand" src="https://apuamacapital.github.io/leads/assets/apuama-capital.png" alt="Apuama Capital" width="380" height="88"><img class="lf-seal" src="https://apuamacapital.github.io/leads/assets/anbima-gestao-de-recursos.jpg" alt="Autorregulação ANBIMA - Gestão de Recursos" width="140" height="105"></div>
   <form class="lf-form" novalidate>
     <label for="lf-name">Nome</label>
     <input id="lf-name" name="name" type="text" autocomplete="name" placeholder="Seu nome completo" required>
@@ -34,7 +34,6 @@
     <button type="submit">Enviar</button>
     <div class="lf-msg" role="status" aria-live="polite"></div>
   </form>
-  <div class="lf-seal"><img src="https://apuamacapital.github.io/leads/assets/anbima-gestao-de-recursos.jpg" alt="Autorregulação ANBIMA - Gestão de Recursos" width="140" height="105"></div>
   <script>
   (function () {
     var WEBHOOK_URL = "https://webhook.automacao.deepspacedata.tech/webhook/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
