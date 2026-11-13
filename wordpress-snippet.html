@@ -69,7 +69,7 @@
       var city = form.querySelector('[name="city"]').value.trim();
       var state = form.querySelector('[name="state"]').value;
       if (name.length < 2) return show("lf-err", "Informe seu nome.");
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show("lf-err", "Informe um e-mail válido.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show("lf-err", "Informe seu melhor e-mail.");
       if (phone.value.replace(/\D/g, "").length < 10) return show("lf-err", "Informe um telefone com DDD.");
       if (city.length < 2) return show("lf-err", "Informe sua cidade.");
       if (!state) return show("lf-err", "Selecione seu estado.");
@@ -83,7 +83,7 @@
       }).then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
-        show("lf-ok", "Recebemos seus dados! Em breve entraremos em contato.");
+        show("lf-ok", "Recebemos sua mensagem! Em breve entraremos em contato.");
       }).catch(function (err) {
         console.error(err);
         show("lf-err", "Não foi possível enviar agora. Tente novamente em instantes.");
