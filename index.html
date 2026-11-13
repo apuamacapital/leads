@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fale com a gente</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #cbd5e1;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --ok-bg: #dcfce7; --ok-text: #166534;
+      --err-bg: #fee2e2; --err-text: #991b1b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+    }
+    h1 { margin: 0 0 6px; font-size: 1.5rem; }
+    p.sub { margin: 0 0 24px; color: var(--muted); font-size: .95rem; }
+    label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
+    button {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { background: var(--accent-hover); }
+    button:disabled { opacity: .6; cursor: wait; }
+    .msg { display: none; margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: .95rem; }
+    .msg.ok { display: block; background: var(--ok-bg); color: var(--ok-text); }
+    .msg.err { display: block; background: var(--err-bg); color: var(--err-text); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Fale com a gente</h1>
+    <p class="sub">Deixe seus dados e entraremos em contato.</p>
+
+    <form id="lead-form" novalidate>
+      <label for="name">Nome</label>
+      <input id="name" name="name" type="text" autocomplete="name" placeholder="Seu nome completo" required>
+
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
+
+      <label for="phone">Telefone</label>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678" maxlength="15" required>
+
+      <button id="submit" type="submit">Enviar</button>
+      <div id="msg" class="msg" role="status" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <script>
+    // ===== CONFIGURAÇÃO =====
+    // URL de produção do nó Webhook do n8n (método POST).
+    // Troque o final (/webhook/leads) pelo "Path" configurado no seu Webhook.
+    const WEBHOOK_URL = "https://webhook.automacao.deepspacedata.tech/webhook/leads";
+    const SOURCE = "github-pages";
+    // =========================
+
+    const form = document.getElementById("lead-form");
+    const phone = document.getElementById("phone");
+    const btn = document.getElementById("submit");
+    const msg = document.getElementById("msg");
+
+    // Máscara BR: (11) 1234-5678 ou (11) 91234-5678
+    function maskPhone(value) {
+      const d = value.replace(/\D/g, "").slice(0, 11);
+      if (d.length <= 2) return d.length ? "(" + d : "";
+      if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+      if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+      return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+    }
+    phone.addEventListener("input", () => { phone.value = maskPhone(phone.value); });
+
+    function show(type, text) {
+      msg.className = "msg " + type;
+      msg.textContent = text;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.className = "msg";
+
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const digits = phone.value.replace(/\D/g, "");
+
+      if (name.length < 2) return show("err", "Informe seu nome.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return show("err", "Informe um e-mail válido.");
+      if (digits.length < 10) return show("err", "Informe um telefone com DDD.");
+
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            phone: phone.value,
+            timestamp: new Date().toISOString(),
+            source: SOURCE
+          })
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        form.reset();
+        show("ok", "Recebemos seus dados! Em breve entraremos em contato.");
+      } catch (err) {
+        console.error(err);
+        show("err", "Não foi possível enviar agora. Tente novamente em instantes.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar";
+      }
+    });
+  </script>
+</body>
+</html>
