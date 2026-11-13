@@ -99,7 +99,7 @@
       <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
 
       <label for="phone">Telefone</label>
-      <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="(11) 91234-5678" maxlength="15" required>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="numeric" placeholder="+55 (11) 91234-5678" maxlength="19" required>
 
       <label for="city">Cidade</label>
       <input id="city" name="city" type="text" autocomplete="address-level2" placeholder="Sua cidade" required>
@@ -149,13 +149,21 @@
     const btn = document.getElementById("submit");
     const msg = document.getElementById("msg");
 
-    // Máscara BR: (11) 1234-5678 ou (11) 91234-5678
+    // Só os dígitos do DDD + número (o +55 é acrescentado pela máscara).
+    function localDigits(value) {
+      let d = value.replace(/\D/g, "");
+      if (value.trim().startsWith("+55") || (d.startsWith("55") && d.length > 11)) d = d.slice(2);
+      return d.slice(0, 11);
+    }
+
+    // Máscara BR: +55 (11) 1234-5678 ou +55 (11) 91234-5678
     function maskPhone(value) {
-      const d = value.replace(/\D/g, "").slice(0, 11);
-      if (d.length <= 2) return d.length ? "(" + d : "";
-      if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-      if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-      return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+      const d = localDigits(value);
+      if (!d.length) return "";
+      if (d.length <= 2) return `+55 (${d}`;
+      if (d.length <= 6) return `+55 (${d.slice(0, 2)}) ${d.slice(2)}`;
+      if (d.length <= 10) return `+55 (${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+      return `+55 (${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
     }
     phone.addEventListener("input", () => { phone.value = maskPhone(phone.value); });
 
@@ -175,7 +183,7 @@
 
       const name = form.querySelector('[name="name"]').value.trim();
       const email = form.querySelector('[name="email"]').value.trim();
-      const digits = phone.value.replace(/\D/g, "");
+      const digits = localDigits(phone.value);
       const city = form.querySelector('[name="city"]').value.trim();
       const state = form.querySelector('[name="state"]').value;
 
