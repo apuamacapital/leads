@@ -80,6 +80,8 @@
     textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
     .counter { margin: 4px 0 16px; text-align: right; font-size: .78rem; color: var(--muted); }
     .optional { font-weight: 400; color: var(--muted); }
+    .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+    .captcha { margin: 0 0 16px; min-height: 0; }
   </style>
 </head>
 <body>
@@ -124,11 +126,19 @@
       <textarea id="comment" name="comment" maxlength="2000" placeholder="Conte como podemos ajudar"></textarea>
       <div class="counter" id="counter">0 / 2000</div>
 
+      <!-- Campo-armadilha para robôs: invisível para pessoas, deve ficar vazio. -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Não preencha este campo</label>
+        <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
       <label class="consent">
         <input type="checkbox" id="consent" name="consent" required>
         <span>Li e concordo com o tratamento dos meus dados pessoais pela Apuama Capital, conforme a <a id="privacy-link" href="#" target="_blank" rel="noopener">Política de Privacidade</a>.</span>
       </label>
       <p class="lgpd">Seus dados (nome, e-mail, telefone, cidade e estado) serão usados pela Apuama Capital apenas para entrar em contato sobre nossos produtos e serviços, conforme a Lei nº 13.709/2018 (LGPD). Eles são armazenados com segurança e não são vendidos nem compartilhados com terceiros para fins comerciais. Você pode pedir acesso, correção ou exclusão dos seus dados a qualquer momento pelo e-mail <a href="mailto:contato@apuamacapital.com.br">contato@apuamacapital.com.br</a>.</p>
+
+      <div id="captcha" class="captcha"></div>
 
       <button id="submit" type="submit">Enviar</button>
       <div id="msg" class="msg" role="status" aria-live="polite"></div>
@@ -141,6 +151,8 @@
     // URL de produção do nó Webhook do n8n (método POST).
     const WEBHOOK_URL = "https://webhook.automacao.deepspacedata.tech/webhook/45d53c0a-74e5-4587-bac8-d64a6d89f01c";
     const SOURCE = "github-pages";
+    // Site key do Cloudflare Turnstile (captcha). Vazio = captcha desligado.
+    const TURNSTILE_SITEKEY = "";
     // Link da Política de Privacidade. Enquanto estiver vazio, o texto aparece sem link.
     const PRIVACY_URL = "https://api.mziq.com/mzfilemanager/v2/d/910ecad9-16d7-464a-af12-f6d5cf291206/686db5e8-7d83-3ab4-6bb4-1e3e06b4f0bd?origin=2";
     // =========================
@@ -148,6 +160,19 @@
     const privacyLink = document.getElementById("privacy-link");
     if (PRIVACY_URL) privacyLink.href = PRIVACY_URL;
     else privacyLink.replaceWith(document.createTextNode(privacyLink.textContent));
+
+    let captchaId = null;
+    if (TURNSTILE_SITEKEY) {
+      window.onTurnstileLoad = () => {
+        captchaId = turnstile.render("#captcha", { sitekey: TURNSTILE_SITEKEY, language: "pt-br", appearance: "interaction-only" });
+      };
+      const sc = document.createElement("script");
+      sc.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad";
+      sc.async = true;
+      document.head.appendChild(sc);
+    }
+    const captchaToken = () => (captchaId !== null && window.turnstile ? turnstile.getResponse(captchaId) : "") || "";
+    const resetCaptcha = () => { if (captchaId !== null && window.turnstile) turnstile.reset(captchaId); };
 
     const form = document.getElementById("lead-form");
     const phone = document.getElementById("phone");
@@ -212,6 +237,15 @@
       if (profile === "Assessor" && officeName.length < 2) return show("err", "Informe o nome do seu escritório de assessoria.");
       if (!document.getElementById("consent").checked) return show("err", "Para continuar, marque a caixa de consentimento (LGPD).");
 
+      // Robô preencheu o campo-armadilha: finge sucesso e não envia nada.
+      if (document.getElementById("website").value) {
+        form.reset();
+        return show("ok", "Recebemos seus dados! Em breve entraremos em contato.");
+      }
+
+      const token = captchaToken();
+      if (TURNSTILE_SITEKEY && !token) return show("err", "Aguarde a verificação de segurança terminar e tente de novo.");
+
       btn.disabled = true;
       btn.textContent = "Enviando...";
 
@@ -231,7 +265,9 @@
             consent: true,
             consent_at: new Date().toISOString(),
             timestamp: new Date().toISOString(),
-            source: SOURCE
+            source: SOURCE,
+            captcha_token: token,
+            website: ""
           })
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -243,6 +279,7 @@
         console.error(err);
         show("err", "Não foi possível enviar agora. Tente novamente em instantes.");
       } finally {
+        resetCaptcha();
         btn.disabled = false;
         btn.textContent = "Enviar";
       }
