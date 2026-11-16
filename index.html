@@ -115,6 +115,11 @@
         <label><input type="radio" name="profile" value="Assessor"> Assessor</label>
       </div>
 
+      <div id="office-field" hidden>
+        <label for="office">Escritório de assessoria</label>
+        <input id="office" name="office" type="text" autocomplete="organization" maxlength="150" placeholder="Nome do escritório">
+      </div>
+
       <label for="comment">Comentário <span class="optional">(opcional)</span></label>
       <textarea id="comment" name="comment" maxlength="2000" placeholder="Conte como podemos ajudar"></textarea>
       <div class="counter" id="counter">0 / 2000</div>
@@ -167,6 +172,15 @@
     }
     phone.addEventListener("input", () => { phone.value = maskPhone(phone.value); });
 
+    const officeField = document.getElementById("office-field");
+    const office = document.getElementById("office");
+    const updateOffice = () => {
+      const isAdvisor = form.querySelector('[name="profile"]:checked')?.value === "Assessor";
+      officeField.hidden = !isAdvisor;
+      office.required = isAdvisor;
+    };
+    form.querySelectorAll('[name="profile"]').forEach((r) => r.addEventListener("change", updateOffice));
+
     const comment = document.getElementById("comment");
     const counter = document.getElementById("counter");
     const updateCounter = () => { counter.textContent = comment.value.length + " / 2000"; };
@@ -194,6 +208,8 @@
       if (!state) return show("err", "Selecione seu estado.");
       const profile = form.querySelector('[name="profile"]:checked')?.value;
       if (!profile) return show("err", "Informe se você é Cliente ou Assessor.");
+      const officeName = profile === "Assessor" ? office.value.trim() : "";
+      if (profile === "Assessor" && officeName.length < 2) return show("err", "Informe o nome do seu escritório de assessoria.");
       if (!document.getElementById("consent").checked) return show("err", "Para continuar, marque a caixa de consentimento (LGPD).");
 
       btn.disabled = true;
@@ -210,6 +226,7 @@
             city,
             state,
             profile,
+            office: officeName,
             comment: comment.value.trim().slice(0, 2000),
             consent: true,
             consent_at: new Date().toISOString(),
@@ -219,6 +236,7 @@
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
+        updateOffice();
         updateCounter();
         show("ok", "Recebemos seus dados! Em breve entraremos em contato.");
       } catch (err) {
